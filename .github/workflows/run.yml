@@ -1,0 +1,28 @@
+name: Check Value
+on:
+  schedule:
+    - cron: '0 * * * *' # 1時間に1回実行
+  workflow_dispatch: # 手動実行用
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - name: Install dependencies
+        run: pip install requests
+      - name: Run script
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: python tracker.py
+      - name: Commit changes # データを保存するために必要
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add last_values.json
+          git commit -m "Update last values" || exit 0
+          git push
